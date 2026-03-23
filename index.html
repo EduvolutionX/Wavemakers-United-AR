@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wavemakers United — AR Water Experience</title>
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep: #041E42;
+    --ocean: #0A3D6B;
+    --wave: #1B6B93;
+    --surf: #3EC1D3;
+    --foam: #A6F1E0;
+    --sand: #F5E6CA;
+    --coral: #FF6B6B;
+    --sun: #FFD93D;
+    --white: #FAFEFF;
+    --text: #E8F4F8;
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--deep);
+    color: var(--text);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ── OCEAN BACKGROUND ── */
+  .ocean-bg {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(27,107,147,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(62,193,211,0.2) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(10,61,107,0.8) 0%, transparent 60%),
+      var(--deep);
+  }
+
+  /* ── WAVE ANIMATION ── */
+  .waves-container {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 200px;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.3;
+  }
+
+  .wave {
+    position: absolute;
+    bottom: 0;
+    left: -10%;
+    width: 120%;
+    height: 100%;
+    animation: drift linear infinite;
+  }
+
+  .wave svg { width: 100%; height: 100%; }
+
+  .wave:nth-child(1) { animation-duration: 7s; opacity: 0.6; }
+  .wave:nth-child(2) { animation-duration: 11s; opacity: 0.4; bottom: -10px; }
+  .wave:nth-child(3) { animation-duration: 15s; opacity: 0.2; bottom: -20px; }
+
+  @keyframes drift {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(-5%); }
+    100% { transform: translateX(0); }
+  }
+
+  /* ── FLOATING BUBBLES ── */
+  .bubbles {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(166,241,224,0.3), rgba(62,193,211,0.05));
+    border: 1px solid rgba(166,241,224,0.15);
+    animation: rise linear infinite;
+  }
+
+  @keyframes rise {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+  }
+
+  /* ── MAIN CONTENT ── */
+  .content {
+    position: relative;
+    z-index: 10;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 48px 0 24px;
+    text-align: center;
+  }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(62,193,211,0.1);
+    border: 1px solid rgba(62,193,211,0.25);
+    border-radius: 100px;
+    padding: 10px 28px 10px 14px;
+    margin-bottom: 32px;
+    backdrop-filter: blur(12px);
+    animation: fadeSlideDown 0.8s ease-out;
+  }
+
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--surf), var(--foam));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  .logo-text {
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, var(--foam), var(--surf));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 20px 0 60px;
+  }
+
+  .hero-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--surf);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    animation: fadeSlideDown 0.8s ease-out 0.2s both;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 28px;
+    animation: fadeSlideDown 0.8s ease-out 0.4s both;
+  }
+
+  .hero h1 .gradient {
+    background: linear-gradient(135deg, var(--sun), var(--coral));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-message {
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    font-weight: 300;
+    line-height: 1.8;
+    max-width: 680px;
+    margin: 0 auto;
+    color: rgba(232,244,248,0.8);
+    animation: fadeSlideDown 0.8s ease-out 0.6s both;
+  }
+
+  .hero-message strong {
+    color: var(--foam);
+    font-weight: 600;
+  }
+
+  .fun-highlight {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--sun), var(--coral));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    font-size: 1.3em;
+    animation: wiggle 2s ease-in-out infinite;
+  }
+
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-3deg); }
+    75% { transform: rotate(3deg); }
+  }
+
+  /* ── HOW IT WORKS ── */
+  .how-section {
+    padding: 40px 0 60px;
+  }
+
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--surf);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .steps-track {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    position: relative;
+  }
+
+  .step-card {
+    background: rgba(10,61,107,0.4);
+    border: 1px solid rgba(62,193,211,0.15);
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    text-align: center;
+    backdrop-filter: blur(12px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+    transform: translateY(30px);
+    animation: cardReveal 0.6s ease-out forwards;
+  }
+
+  .step-card:nth-child(1) { animation-delay: 0.8s; }
+  .step-card:nth-child(2) { animation-delay: 1.0s; }
+  .step-card:nth-child(3) { animation-delay: 1.2s; }
+
+  @keyframes cardReveal {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--surf);
+    box-shadow: 0 20px 60px rgba(62,193,211,0.15);
+  }
+
+  .step-num {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--surf), var(--foam));
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-weight: 900;
+    font-size: 20px;
+    color: var(--deep);
+  }
+
+  .step-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .step-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--white);
+  }
+
+  .step-card p {
+    font-size: 0.88rem;
+    color: rgba(232,244,248,0.6);
+    line-height: 1.6;
+  }
+
+  /* ── DEVICE DETECT BANNER ── */
+  .device-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(62,193,211,0.1);
+    border: 1px solid rgba(62,193,211,0.2);
+    border-radius: 12px;
+    padding: 14px 24px;
+    margin: 0 auto 48px;
+    max-width: 600px;
+    font-size: 0.92rem;
+    backdrop-filter: blur(8px);
+  }
+
+  .device-banner .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--foam);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* ── AR MODELS GRID ── */
+  .models-section { padding: 20px 0 100px; }
+
+  .models-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .model-card {
+    background: rgba(10,61,107,0.35);
+    border: 1px solid rgba(62,193,211,0.12);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  .model-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out, border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .model-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--surf);
+    box-shadow: 0 24px 64px rgba(62,193,211,0.2);
+  }
+
+  .model-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: linear-gradient(135deg, rgba(27,107,147,0.3), rgba(4,30,66,0.6));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .model-thumb .thumb-icon {
+    font-size: 64px;
+    filter: drop-shadow(0 4px 20px rgba(62,193,211,0.3));
+    transition: transform 0.4s ease;
+  }
+
+  .model-card:hover .thumb-icon {
+    transform: scale(1.15) rotate(-5deg);
+  }
+
+  .model-thumb .ar-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(4,30,66,0.7);
+    border: 1px solid rgba(62,193,211,0.3);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--surf);
+    letter-spacing: 1px;
+    backdrop-filter: blur(8px);
+  }
+
+  .model-info {
+    padding: 20px;
+  }
+
+  .model-info h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--white);
+  }
+
+  .model-info p {
+    font-size: 0.85rem;
+    color: rgba(232,244,248,0.55);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .ar-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--surf), var(--wave));
+    color: var(--deep);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ar-button:hover {
+    box-shadow: 0 8px 32px rgba(62,193,211,0.4);
+    transform: translateY(-2px);
+  }
+
+  .ar-button .btn-icon { font-size: 18px; }
+
+  /* ── MODAL / OVERLAY ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(4,30,66,0.92);
+    backdrop-filter: blur(20px);
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal-box {
+    background: rgba(10,61,107,0.6);
+    border: 1px solid rgba(62,193,211,0.2);
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 560px;
+    width: 100%;
+    text-align: center;
+    animation: modalIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-box .modal-icon { font-size: 64px; margin-bottom: 16px; }
+  .modal-box h2 { font-size: 1.5rem; margin-bottom: 10px; }
+  .modal-box p { color: rgba(232,244,248,0.7); margin-bottom: 24px; line-height: 1.6; }
+
+  .modal-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  .modal-btn {
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .modal-btn.primary {
+    background: linear-gradient(135deg, var(--surf), var(--foam));
+    color: var(--deep);
+  }
+
+  .modal-btn.secondary {
+    background: rgba(62,193,211,0.1);
+    border: 1px solid rgba(62,193,211,0.3);
+    color: var(--surf);
+  }
+
+  .modal-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(62,193,211,0.3); }
+
+  .modal-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 28px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+
+  .modal-close:hover { opacity: 1; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 40px 24px;
+    position: relative;
+    z-index: 10;
+    font-size: 0.82rem;
+    color: rgba(232,244,248,0.35);
+    border-top: 1px solid rgba(62,193,211,0.08);
+  }
+
+  footer a { color: var(--surf); text-decoration: none; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeSlideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .steps-track { grid-template-columns: 1fr 1fr; }
+    .models-grid { grid-template-columns: 1fr; }
+    .modal-actions { flex-direction: column; }
+    header { padding: 32px 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- OCEAN BACKGROUND -->
+<div class="ocean-bg"></div>
+
+<!-- BUBBLES -->
+<div class="bubbles" id="bubbles"></div>
+
+<!-- WAVES -->
+<div class="waves-container">
+  <div class="wave">
+    <svg viewBox="0 0 1440 200" preserveAspectRatio="none">
+      <path d="M0,120 C360,180 720,60 1080,120 C1260,150 1380,100 1440,120 L1440,200 L0,200 Z" fill="rgba(62,193,211,0.15)"/>
+    </svg>
+  </div>
+  <div class="wave">
+    <svg viewBox="0 0 1440 200" preserveAspectRatio="none">
+      <path d="M0,140 C240,80 480,180 720,120 C960,60 1200,160 1440,100 L1440,200 L0,200 Z" fill="rgba(166,241,224,0.08)"/>
+    </svg>
+  </div>
+  <div class="wave">
+    <svg viewBox="0 0 1440 200" preserveAspectRatio="none">
+      <path d="M0,160 C320,100 640,180 960,130 C1120,110 1280,170 1440,140 L1440,200 L0,200 Z" fill="rgba(27,107,147,0.1)"/>
+    </svg>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-badge">
+      <span class="logo-text">Wavemakers United</span>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <p class="hero-tag">Augmented Reality Experience</p>
+    <h1>Welcome, <span class="gradient">Wavemaker!</span></h1>
+    <p class="hero-message">
+      Great that you want to join this activity with us! We have prepared some
+      <strong>AR models of Water assets</strong> for you to explore.
+      Have a look and learn — but most importantly, have
+      <span class="fun-highlight">Fun!</span>
+    </p>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-section">
+    <p class="section-label">Getting Started</p>
+    <h2 class="section-title">How It Works</h2>
+    <div class="steps-track">
+      <div class="step-card">
+        <span class="step-icon">👆</span>
+        <div class="step-num">1</div>
+        <h3>Pick a Model</h3>
+        <p>Browse the water assets below and tap the one that catches your eye.</p>
+      </div>
+      <div class="step-card">
+        <span class="step-icon">📷</span>
+        <div class="step-num">2</div>
+        <h3>Point Your Camera</h3>
+        <p>Allow camera access and point at a flat surface to place the 3D model.</p>
+      </div>
+      <div class="step-card">
+        <span class="step-icon">🤩</span>
+        <div class="step-num">3</div>
+        <h3>Explore & Learn</h3>
+        <p>Walk around, zoom in, and discover every detail of the water asset in AR!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEVICE DETECTION BANNER -->
+  <div class="device-banner" id="deviceBanner">
+    <span class="dot"></span>
+    <span id="deviceText">Detecting your device…</span>
+  </div>
+
+  <!-- AR MODELS -->
+  <section class="models-section">
+    <p class="section-label">Explore the Collection</p>
+    <h2 class="section-title">Water AR Models</h2>
+    <div class="models-grid" id="modelsGrid">
+      <!-- Cards are injected by JS -->
+    </div>
+  </section>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <button class="modal-close" onclick="closeModal()">&times;</button>
+  <div class="modal-box" id="modalContent"></div>
+</div>
+
+<footer>
+  Made by <a href="#">EduvolutionX</a> · Augmented Reality for Water Education
+</footer>
+
+<script>
+// ── CONFIG: ADD YOUR MODELS HERE ──
+// For each model, provide:
+//   name        — display name
+//   description — short description
+//   icon        — emoji for the thumbnail
+//   usdz        — path to the .usdz file (iOS)
+//   glb         — path to the .glb file (Android / desktop)
+//   poster      — (optional) path to a poster image for the thumbnail
+
+const MODELS = [
+  {
+    name: "Water Cycle",
+    description: "Discover how water moves through evaporation, condensation, and precipitation in this interactive cycle.",
+    icon: "🔄",
+    usdz: "models/water-cycle.usdz",
+    glb: "models/water-cycle.glb",
+  },
+  {
+    name: "Wastewater Treatment",
+    description: "Explore how dirty water gets cleaned and returned safely to the environment through treatment processes.",
+    icon: "🏭",
+    usdz: "models/wastewater-treatment.usdz",
+    glb: "models/wastewater-treatment.glb",
+  },
+  {
+    name: "Ocean Garbage",
+    description: "See the impact of plastic pollution and waste floating in our oceans — and why it matters.",
+    icon: "🗑️",
+    usdz: "models/ocean-garbage.usdz",
+    glb: "models/ocean-garbage.glb",
+  },
+  {
+    name: "Clean Ocean",
+    description: "A pristine ocean environment showing the beauty of healthy, unpolluted waters.",
+    icon: "🌊",
+    usdz: "models/clean-ocean.usdz",
+    glb: "models/clean-ocean.glb",
+  },
+  {
+    name: "Coral Reef",
+    description: "A vibrant coral reef ecosystem teeming with underwater life and color.",
+    icon: "🪸",
+    usdz: "models/coral-reef.usdz",
+    glb: "models/coral-reef.glb",
+  },
+  {
+    name: "Dam Structure",
+    description: "A hydroelectric dam model showcasing how water generates renewable energy.",
+    icon: "🏗️",
+    usdz: "models/dam.usdz",
+    glb: "models/dam.glb",
+  },
+  {
+    name: "Earth Water",
+    description: "See how water is distributed across our planet — from oceans and ice caps to rivers and groundwater.",
+    icon: "🌍",
+    usdz: "models/earth-water.usdz",
+    glb: "models/earth-water.glb",
+  },
+];
+
+// ── DEVICE DETECTION ──
+const ua = navigator.userAgent;
+const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/i.test(ua);
+const isMobile = isIOS || isAndroid;
+
+const deviceBannerText = document.getElementById('deviceText');
+if (isIOS) {
+  deviceBannerText.textContent = "🍎 iOS detected — you'll get AR Quick Look with USDZ files";
+} else if (isAndroid) {
+  deviceBannerText.textContent = "🤖 Android detected — you'll get Scene Viewer with GLB files";
+} else {
+  deviceBannerText.textContent = "🖥️ Desktop detected — open this page on your phone for the full AR experience!";
+}
+
+// ── RENDER MODEL CARDS ──
+const grid = document.getElementById('modelsGrid');
+
+MODELS.forEach((model, idx) => {
+  const card = document.createElement('div');
+  card.className = 'model-card';
+  card.style.transitionDelay = `${idx * 0.1}s`;
+
+  card.innerHTML = `
+    <div class="model-thumb">
+      <span class="thumb-icon">${model.icon}</span>
+      <span class="ar-badge">AR</span>
+    </div>
+    <div class="model-info">
+      <h3>${model.name}</h3>
+      <p>${model.description}</p>
+      <button class="ar-button" data-index="${idx}">
+        <span class="btn-icon">📲</span>
+        View in AR
+      </button>
+    </div>
+  `;
+
+  card.querySelector('.ar-button').addEventListener('click', (e) => {
+    e.stopPropagation();
+    openARModel(model);
+  });
+
+  grid.appendChild(card);
+});
+
+// ── INTERSECTION OBSERVER FOR CARD REVEAL ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.model-card').forEach(card => observer.observe(card));
+
+// ── AR LAUNCH LOGIC ──
+function openARModel(model) {
+  if (isIOS) {
+    // iOS AR Quick Look via USDZ
+    const anchor = document.createElement('a');
+    anchor.setAttribute('rel', 'ar');
+    anchor.href = model.usdz;
+    // Required: an <img> child for AR Quick Look
+    const img = document.createElement('img');
+    img.src = '';
+    img.style.display = 'none';
+    anchor.appendChild(img);
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+  } else if (isAndroid) {
+    // Android Scene Viewer
+    const intentUrl = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(window.location.origin + '/' + model.glb)}&mode=ar_preferred#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end;`;
+    window.location = intentUrl;
+  } else {
+    // Desktop fallback — show modal with info
+    showDesktopModal(model);
+  }
+}
+
+function showDesktopModal(model) {
+  const modal = document.getElementById('modal');
+  const content = document.getElementById('modalContent');
+  content.innerHTML = `
+    <div class="modal-icon">${model.icon}</div>
+    <h2>${model.name}</h2>
+    <p>${model.description}</p>
+    <p style="font-size:0.9rem; color: var(--surf);">
+      AR works best on a mobile device. Scan the QR code or open this page on your phone to experience <strong>${model.name}</strong> in augmented reality!
+    </p>
+    <div class="modal-actions">
+      <a class="modal-btn primary" href="${model.glb}" download>
+        ⬇️ Download GLB
+      </a>
+      <a class="modal-btn primary" href="${model.usdz}" download>
+        ⬇️ Download USDZ
+      </a>
+      <button class="modal-btn secondary" onclick="closeModal()">Close</button>
+    </div>
+  `;
+  modal.classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+}
+
+document.getElementById('modal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ── BUBBLE GENERATOR ──
+function createBubbles() {
+  const container = document.getElementById('bubbles');
+  for (let i = 0; i < 20; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = Math.random() * 40 + 10;
+    b.style.width = size + 'px';
+    b.style.height = size + 'px';
+    b.style.left = Math.random() * 100 + '%';
+    b.style.animationDuration = (Math.random() * 12 + 8) + 's';
+    b.style.animationDelay = (Math.random() * 10) + 's';
+    container.appendChild(b);
+  }
+}
+createBubbles();
+</script>
+
+</body>
+</html>
