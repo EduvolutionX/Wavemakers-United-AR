@@ -669,36 +669,29 @@ const MODELS = [
     name: "Ocean Garbage",
     description: "See the impact of plastic pollution and waste floating in our oceans — and why it matters.",
     icon: "🗑️",
-    usdz: "models/ocean-garbage.usdz",
-    glb: "models/ocean-garbage.glb",
+    usdz: "",
+    glb: "ocean+garbage+cylinder+3d+model.glb",
   },
   {
     name: "Clean Ocean",
     description: "A pristine ocean environment showing the beauty of healthy, unpolluted waters.",
     icon: "🌊",
-    usdz: "models/clean-ocean.usdz",
-    glb: "models/clean-ocean.glb",
+    usdz: "",
+    glb: "Ocean clean.glb",
   },
   {
     name: "Coral Reef",
     description: "A vibrant coral reef ecosystem teeming with underwater life and color.",
     icon: "🪸",
-    usdz: "models/coral-reef.usdz",
-    glb: "models/coral-reef.glb",
+    usdz: "",
+    glb: "colorful coral reef 3d model.glb",
   },
   {
     name: "Dam Structure",
     description: "A hydroelectric dam model showcasing how water generates renewable energy.",
     icon: "🏗️",
-    usdz: "models/dam.usdz",
-    glb: "models/dam.glb",
-  },
-  {
-    name: "Earth Water",
-    description: "See how water is distributed across our planet — from oceans and ice caps to rivers and groundwater.",
-    icon: "🌍",
-    usdz: "models/earth-water.usdz",
-    glb: "models/earth-water.glb",
+    usdz: "",
+    glb: "dam 3d model.glb",
   },
 ];
 
@@ -762,7 +755,7 @@ document.querySelectorAll('.model-card').forEach(card => observer.observe(card))
 
 // ── AR LAUNCH LOGIC ──
 function openARModel(model) {
-  if (isIOS) {
+  if (isIOS && model.usdz) {
     // iOS AR Quick Look via USDZ
     const anchor = document.createElement('a');
     anchor.setAttribute('rel', 'ar');
@@ -775,7 +768,7 @@ function openARModel(model) {
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
-  } else if (isAndroid) {
+  } else if (isMobile && model.glb) {
     // Android — use <model-viewer> with built-in AR support
     // This handles Scene Viewer, WebXR, and fallbacks automatically
     let viewer = document.getElementById('ar-model-viewer');
@@ -807,7 +800,11 @@ function openARModel(model) {
     }
 
     viewer.setAttribute('src', model.glb);
-    viewer.setAttribute('ios-src', model.usdz);
+    if (model.usdz) {
+      viewer.setAttribute('ios-src', model.usdz);
+    } else {
+      viewer.removeAttribute('ios-src');
+    }
     viewer.style.display = 'block';
 
     // Automatically activate AR if available
