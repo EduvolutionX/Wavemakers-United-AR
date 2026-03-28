@@ -776,9 +776,47 @@ function openARModel(model) {
     anchor.click();
     document.body.removeChild(anchor);
   } else if (isAndroid) {
-    // Android Scene Viewer
-    const intentUrl = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(window.location.origin + '/' + model.glb)}&mode=ar_preferred#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end;`;
-    window.location = intentUrl;
+    // Android — use <model-viewer> with built-in AR support
+    // This handles Scene Viewer, WebXR, and fallbacks automatically
+    let viewer = document.getElementById('ar-model-viewer');
+    if (!viewer) {
+      viewer = document.createElement('model-viewer');
+      viewer.id = 'ar-model-viewer';
+      viewer.setAttribute('ar', '');
+      viewer.setAttribute('ar-modes', 'scene-viewer webxr quick-look');
+      viewer.setAttribute('ar-scale', 'auto');
+      viewer.setAttribute('camera-controls', '');
+      viewer.style.position = 'fixed';
+      viewer.style.top = '0';
+      viewer.style.left = '0';
+      viewer.style.width = '100vw';
+      viewer.style.height = '100vh';
+      viewer.style.zIndex = '10000';
+      viewer.style.backgroundColor = 'rgba(0,0,0,0.9)';
+      viewer.style.display = 'none';
+
+      // Close button
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = '✕';
+      closeBtn.setAttribute('slot', 'default');
+      closeBtn.style.cssText = 'position:absolute;top:16px;right:16px;z-index:10001;background:var(--coral);color:white;border:none;border-radius:50%;width:40px;height:40px;font-size:1.2rem;cursor:pointer;';
+      closeBtn.addEventListener('click', () => { viewer.style.display = 'none'; });
+      viewer.appendChild(closeBtn);
+
+      document.body.appendChild(viewer);
+    }
+
+    viewer.setAttribute('src', model.glb);
+    viewer.setAttribute('ios-src', model.usdz);
+    viewer.style.display = 'block';
+
+    // Automatically activate AR if available
+    viewer.addEventListener('load', function onLoad() {
+      viewer.removeEventListener('load', onLoad);
+      if (viewer.canActivateAR) {
+        viewer.activateAR();
+      }
+    });
   } else {
     // Desktop fallback — show modal with info
     showDesktopModal(model);
